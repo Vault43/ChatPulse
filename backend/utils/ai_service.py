@@ -3,6 +3,7 @@ import google.generativeai as genai
 import json
 import os
 from typing import List, Dict, Optional
+import itertools
 from database import SessionLocal, AIRule, User
 
 class AIService:
@@ -12,10 +13,9 @@ class AIService:
         if self.openai_api_key:
             openai.api_key = self.openai_api_key
         
-        # Initialize Gemini
-        self.gemini_api_key = os.getenv("GEMINI_API_KEY")
-        if self.gemini_api_key:
-            genai.configure(api_key=self.gemini_api_key)
+        # Initialize Gemini (supports multiple keys)
+        self.gemini_api_keys = self._load_gemini_keys()
+        self._gemini_key_cycle = itertools.cycle(self.gemini_api_keys) if self.gemini_api_keys else None
     
     async def generate_response(
         self, 
@@ -107,7 +107,7 @@ class AIService:
         try:
             if provider == "openai" and self.openai_api_key:
                 return await self._openai_response(context_messages, system_prompt)
-            elif provider == "gemini" and self.gemini_api_key:
+            elif provider == "gemini" and self.gemini_api_keys:
                 return await self._gemini_response(message, system_prompt)
             else:
                 # Fallback response
@@ -134,7 +134,14 @@ class AIService:
     
     async def _gemini_response(self, message: str, system_prompt: str) -> str:
         """Generate response using Gemini."""
-        
+
+        gemini_key = self._get_next_gemini_key()
+        if not gemini_key:
+            return "Thank you for your message. Our team will get back to you shortly."
+
+        # Note: genai.configure is global, so we configure per request using the selected key.
+        genai.configure(api_key=gemini_key)
+
         model = genai.GenerativeModel('gemini-pro')
         
         # Combine system prompt and message
@@ -149,9 +156,50 @@ class AIService:
         providers = []
         if self.openai_api_key:
             providers.append("openai")
-        if self.gemini_api_key:
+        if self.gemini_api_keys:
             providers.append("gemini")
         return providers
+
+    def _load_gemini_keys(self) -> List[str]:
+        """Load Gemini keys from env.
+
+        Supported formats:
+        - GEMINI_API_KEY (single key)
+        - GEMINI_API_KEYS (comma/newline separated)
+        - GEMINI_API_KEY_1..GEMINI_API_KEY_20
+        """
+
+        keys: List[str] = []
+
+        bulk = os.getenv("GEMINI_API_KEYS")
+        if bulk:
+            # Allow comma and/or newline separated lists
+            raw_parts = bulk.replace("\r\n", "\n").replace("\r", "\n").replace(",", "\n").split("\n")
+            keys.extend([p.strip() for p in raw_parts if p.strip()])
+
+        for i in range(1, 21):
+            k = os.getenv(f"GEMINI_API_KEY_{i}")
+            if k and k.strip():
+                keys.append(k.strip())
+
+        single = os.getenv("GEMINI_API_KEY")
+        if single and single.strip():
+            keys.append(single.strip())
+
+        # Dedupe while preserving order
+        deduped: List[str] = []
+        seen = set()
+        for k in keys:
+            if k not in seen:
+                deduped.append(k)
+                seen.add(k)
+
+        return deduped
+
+    def _get_next_gemini_key(self) -> Optional[str]:
+        if not self._gemini_key_cycle:
+            return None
+        return next(self._gemini_key_cycle)
 
 # Singleton instance
 ai_service = AIService()

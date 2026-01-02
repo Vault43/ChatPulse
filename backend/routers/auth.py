@@ -5,7 +5,7 @@ from datetime import timedelta
 from pydantic import BaseModel, EmailStr
 from typing import Optional
 
-from database import get_db, User
+from database import get_db, User, UserStatus
 from utils.security import verify_password, get_password_hash, create_access_token, verify_token, validate_email, validate_password, sanitize_input
 
 router = APIRouter()
@@ -98,7 +98,7 @@ async def login(user_credentials: UserLogin, db: Session = Depends(get_db)):
             headers={"WWW-Authenticate": "Bearer"},
         )
     
-    if user.status != "active":
+    if user.status != UserStatus.ACTIVE:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Account is not active"
