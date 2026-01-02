@@ -17,6 +17,12 @@ security = HTTPBearer()
 FLUTTERWAVE_SECRET_KEY = os.getenv("FLUTTERWAVE_SECRET_KEY")
 FLUTTERWAVE_PUBLIC_KEY = os.getenv("FLUTTERWAVE_PUBLIC_KEY")
 
+# NOWPayments configuration
+NOWPAYMENTS_API_KEY = os.getenv("NOWPAYMENTS_API_KEY")
+NOWPAYMENTS_IPN_CALLBACK_URL = os.getenv("NOWPAYMENTS_IPN_CALLBACK_URL")
+NOWPAYMENTS_SUCCESS_URL = os.getenv("NOWPAYMENTS_SUCCESS_URL")
+NOWPAYMENTS_CANCEL_URL = os.getenv("NOWPAYMENTS_CANCEL_URL")
+
 # Subscription plans configuration
 SUBSCRIPTION_PLANS = {
     "free": {
@@ -92,6 +98,16 @@ class PaymentRequest(BaseModel):
     redirect_url: Optional[str] = None
 
 class PaymentResponse(BaseModel):
+    payment_link: str
+    reference: str
+
+class NowPaymentsRequest(BaseModel):
+    plan_id: str
+    price_currency: str = "USD"
+    pay_currency: str = "btc"
+    email: Optional[str] = None
+
+class NowPaymentsResponse(BaseModel):
     payment_link: str
     reference: str
 
@@ -209,6 +225,94 @@ async def initiate_payment(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Payment service error: {str(e)}"
+        )
+
+@router.post("/initiate-nowpayments-btc", response_model=NowPaymentsResponse)
+async def initiate_nowpayments_btc(
+    payment_data: NowPaymentsRequest,
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    db: Session = Depends(get_db)
+):
+    """Initiate BTC payment via NOWPayments invoice."""
+
+    if not NOWPAYMENTS_API_KEY:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="NOWPayments is not configured"
+        )
+
+    if payment_data.plan_id not in SUBSCRIPTION_PLANS:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid subscription plan"
+        )
+
+    payload = verify_token(credentials.credentials)
+    email = payload.get("sub")
+    user = db.query(User).filter(User.email == email).first()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User not found"
+        )
+
+    plan = SUBSCRIPTION_PLANS[payment_data.plan_id]
+    reference = f"chatpulse_{user.id}_{payment_data.plan_id}_{datetime.utcnow().timestamp()}"
+
+    invoice_payload = {
+        "price_amount": plan["price"],
+        "price_currency": payment_data.price_currency,
+        "pay_currency": payment_data.pay_currency,
+        "order_id": reference,
+        "order_description": f"ChatPulse {plan['name']} plan subscription",
+    }
+
+    # Optional URLs (recommended for hosted checkout)
+    if NOWPAYMENTS_IPN_CALLBACK_URL:
+        invoice_payload["ipn_callback_url"] = NOWPAYMENTS_IPN_CALLBACK_URL
+    if NOWPAYMENTS_SUCCESS_URL:
+        invoice_payload["success_url"] = NOWPAYMENTS_SUCCESS_URL
+    if NOWPAYMENTS_CANCEL_URL:
+        invoice_payload["cancel_url"] = NOWPAYMENTS_CANCEL_URL
+
+    try:
+        response = requests.post(
+            "https://api.nowpayments.io/v1/invoice",
+            json=invoice_payload,
+            headers={
+                "x-api-key": NOWPAYMENTS_API_KEY,
+                "Content-Type": "application/json"
+            },
+            timeout=30
+        )
+
+        if response.status_code not in (200, 201):
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail=f"NOWPayments error: {response.text}"
+            )
+
+        data = response.json()
+        payment_link = data.get("invoice_url")
+        invoice_id = data.get("id")
+
+        if not payment_link or not invoice_id:
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail="NOWPayments did not return an invoice URL"
+            )
+
+        return NowPaymentsResponse(
+            payment_link=payment_link,
+            reference=f"nowpayments_invoice_{invoice_id}"
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"NOWPayments error: {str(e)}"
         )
 
 @router.get("/current", response_model=SubscriptionResponse)

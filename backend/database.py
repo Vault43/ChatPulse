@@ -101,6 +101,8 @@ class Subscription(Base):
     currency = Column(String, default="USD")
     status = Column(String, default="active")
     flutterwave_reference = Column(String, unique=True)
+    payment_provider = Column(String, default="flutterwave")
+    nowpayments_reference = Column(String, unique=True)
     started_at = Column(DateTime, default=datetime.utcnow)
     expires_at = Column(DateTime)
     created_at = Column(DateTime, default=datetime.utcnow)
