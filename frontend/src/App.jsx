@@ -4,6 +4,7 @@ import { useAuth } from './contexts/AuthContext'
 import Layout from './components/Layout'
 import Login from './pages/Login'
 import Register from './pages/Register'
+import GoogleCallback from './pages/GoogleCallback'
 import Dashboard from './pages/Dashboard'
 import Chat from './pages/Chat'
 import AIRules from './pages/AIRules'
@@ -26,6 +27,7 @@ function App() {
     <Routes>
       <Route path="/login" element={!user ? <Login /> : <Navigate to="/dashboard" />} />
       <Route path="/register" element={!user ? <Register /> : <Navigate to="/dashboard" />} />
+      <Route path="/auth/callback" element={<GoogleCallback />} />
       <Route path="/" element={user ? <Layout /> : <Navigate to="/login" />}>
         <Route index element={<Navigate to="/dashboard" />} />
         <Route path="dashboard" element={<Dashboard />} />

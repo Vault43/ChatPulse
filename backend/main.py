@@ -7,7 +7,7 @@ import os
 from dotenv import load_dotenv
 
 from database import engine, Base
-from routers import auth, users, chat, ai, subscriptions, webhooks
+from routers import auth, users, chat, ai, subscriptions, webhooks, google_auth
 from utils.security import verify_token
 
 load_dotenv()
@@ -46,6 +46,7 @@ security = HTTPBearer()
 
 # Include routers
 app.include_router(auth.router, prefix="/api/auth", tags=["authentication"])
+app.include_router(google_auth.router, prefix="/api/auth/google", tags=["google-auth"])
 app.include_router(users.router, prefix="/api/users", tags=["users"])
 app.include_router(chat.router, prefix="/api/chat", tags=["chat"])
 app.include_router(ai.router, prefix="/api/ai", tags=["ai"])

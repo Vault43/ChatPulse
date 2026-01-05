@@ -43,7 +43,7 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True)
     email = Column(String, unique=True, index=True, nullable=False)
     username = Column(String, unique=True, index=True, nullable=False)
-    hashed_password = Column(String, nullable=False)
+    hashed_password = Column(String, nullable=True)  # Made nullable for Google OAuth
     full_name = Column(String)
     phone = Column(String)
     company = Column(String)
@@ -51,6 +51,12 @@ class User(Base):
     subscription_status = Column(String, default="active")
     status = Column(Enum(UserStatus), default=UserStatus.ACTIVE)
     is_verified = Column(Boolean, default=False)
+    
+    # Google OAuth fields
+    google_id = Column(String, unique=True, index=True, nullable=True)
+    avatar_url = Column(String, nullable=True)
+    last_login = Column(DateTime, nullable=True)
+    
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     

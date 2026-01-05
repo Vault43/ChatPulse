@@ -55,6 +55,43 @@ export const AuthProvider = ({ children }) => {
     }
   }
 
+  const loginWithGoogle = async () => {
+    try {
+      // Redirect to Google OAuth
+      window.location.href = `${api.defaults.baseURL}/auth/google/google`
+    } catch (error) {
+      return { 
+        success: false, 
+        error: 'Google login failed' 
+      }
+    }
+  }
+
+  const handleGoogleCallback = async (code, state) => {
+    try {
+      const response = await api.get('/auth/google/google/callback', {
+        params: { code, state }
+      })
+      
+      const { access_token, user, is_new_user } = response.data
+      
+      localStorage.setItem('token', access_token)
+      api.defaults.headers.common['Authorization'] = `Bearer ${access_token}`
+      setUser(user)
+      
+      return { 
+        success: true, 
+        user, 
+        is_new_user 
+      }
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error.response?.data?.detail || 'Google authentication failed' 
+      }
+    }
+  }
+
   const register = async (userData) => {
     try {
       await api.post('/auth/register', userData)
@@ -76,6 +113,8 @@ export const AuthProvider = ({ children }) => {
   const value = {
     user,
     login,
+    loginWithGoogle,
+    handleGoogleCallback,
     register,
     logout,
     loading
