@@ -69,7 +69,7 @@ class ChatMessage(Base):
     session_id = Column(Integer, ForeignKey("chat_sessions.id"), nullable=False)
     message_type = Column(String, nullable=False)  # customer, ai, human
     content = Column(Text, nullable=False)
-    metadata = Column(Text)  # JSON for additional data
+    message_metadata = Column(Text)  # JSON for additional data
     created_at = Column(DateTime, default=datetime.utcnow)
     
     # Relationships
