@@ -104,6 +104,54 @@ export const AuthProvider = ({ children }) => {
     }
   }
 
+  const sendVerificationCode = async (email) => {
+    try {
+      const response = await api.post('/auth/send-verification', { email })
+      return { 
+        success: true, 
+        message: response.data.message,
+        email_sent: response.data.email_sent
+      }
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error.response?.data?.detail || 'Failed to send verification code' 
+      }
+    }
+  }
+
+  const verifyCode = async (email, code) => {
+    try {
+      const response = await api.post('/auth/verify-code', { email, code })
+      return { 
+        success: true, 
+        message: response.data.message,
+        verified: response.data.verified
+      }
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error.response?.data?.detail || 'Invalid verification code' 
+      }
+    }
+  }
+
+  const signupWithVerification = async (userData) => {
+    try {
+      const response = await api.post('/auth/signup-with-verification', userData)
+      return { 
+        success: true, 
+        message: response.data.message,
+        user: response.data.user
+      }
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error.response?.data?.detail || 'Signup failed' 
+      }
+    }
+  }
+
   const logout = () => {
     localStorage.removeItem('token')
     delete api.defaults.headers.common['Authorization']
@@ -116,6 +164,9 @@ export const AuthProvider = ({ children }) => {
     loginWithGoogle,
     handleGoogleCallback,
     register,
+    sendVerificationCode,
+    verifyCode,
+    signupWithVerification,
     logout,
     loading
   }
