@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, status, Depends
 from sqlalchemy.orm import Session
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel
 from datetime import datetime, timedelta
 import secrets
 import smtplib
@@ -14,14 +14,14 @@ from utils.security import get_password_hash
 router = APIRouter()
 
 class EmailVerificationRequest(BaseModel):
-    email: EmailStr
+    email: str
 
 class VerifyCodeRequest(BaseModel):
-    email: EmailStr
+    email: str
     code: str
 
 class SignupWithVerificationRequest(BaseModel):
-    email: EmailStr
+    email: str
     username: str
     password: str
     full_name: str = None
