@@ -7,7 +7,7 @@ import os
 from dotenv import load_dotenv
 
 from database import engine, Base, SessionLocal
-from routers import auth, users, chat, ai, subscriptions, webhooks, google_auth, email_verification
+from routers import auth, users, chat, ai, subscriptions, webhooks, google_auth, email_verification, password_reset
 from utils.security import verify_token
 from sqlalchemy import text
 
@@ -71,6 +71,7 @@ security = HTTPBearer()
 # Include routers
 app.include_router(auth.router, prefix="/api/auth", tags=["authentication"])
 app.include_router(email_verification.router, prefix="/api/auth", tags=["email-verification"])
+app.include_router(password_reset.router, prefix="/api/auth", tags=["password-reset"])
 app.include_router(google_auth.router, prefix="/api/auth/google", tags=["google-auth"])
 app.include_router(users.router, prefix="/api/users", tags=["users"])
 app.include_router(chat.router, prefix="/api/chat", tags=["chat"])

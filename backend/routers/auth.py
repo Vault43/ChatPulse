@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 from datetime import timedelta
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel
 from typing import Optional
 
 from database import get_db, User, UserStatus
@@ -13,14 +13,14 @@ security = HTTPBearer()
 
 # Pydantic models
 class UserCreate(BaseModel):
-    email: EmailStr
+    email: str
     username: str
     password: str
     full_name: Optional[str] = None
     company: Optional[str] = None
 
 class UserLogin(BaseModel):
-    email: EmailStr
+    email: str
     password: str
 
 class Token(BaseModel):

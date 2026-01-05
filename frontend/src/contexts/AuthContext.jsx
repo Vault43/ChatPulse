@@ -152,6 +152,53 @@ export const AuthProvider = ({ children }) => {
     }
   }
 
+  const forgotPassword = async (email) => {
+    try {
+      const response = await api.post('/auth/forgot-password', { email })
+      return { 
+        success: true, 
+        message: response.data.message,
+        email_sent: response.data.email_sent
+      }
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error.response?.data?.detail || 'Failed to send reset email' 
+      }
+    }
+  }
+
+  const resetPassword = async (token, newPassword) => {
+    try {
+      const response = await api.post('/auth/reset-password', { token, new_password: newPassword })
+      return { 
+        success: true, 
+        message: response.data.message
+      }
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error.response?.data?.detail || 'Failed to reset password' 
+      }
+    }
+  }
+
+  const verifyResetToken = async (token) => {
+    try {
+      const response = await api.get(`/auth/verify-reset-token/${token}`)
+      return { 
+        success: true, 
+        valid: response.data.valid,
+        email: response.data.email
+      }
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error.response?.data?.detail || 'Invalid token' 
+      }
+    }
+  }
+
   const logout = () => {
     localStorage.removeItem('token')
     delete api.defaults.headers.common['Authorization']
@@ -167,6 +214,9 @@ export const AuthProvider = ({ children }) => {
     sendVerificationCode,
     verifyCode,
     signupWithVerification,
+    forgotPassword,
+    resetPassword,
+    verifyResetToken,
     logout,
     loading
   }
