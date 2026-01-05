@@ -1,8 +1,7 @@
 from datetime import datetime, timedelta
 from typing import Optional
 from jose import JWTError, jwt
-from passlib.context import CryptContext
-from fastapi import HTTPException, status
+import bcrypt
 import secrets
 import os
 
@@ -11,27 +10,33 @@ SECRET_KEY = os.getenv("SECRET_KEY", secrets.token_urlsafe(32))
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
 def verify_password(plain_password, hashed_password):
     """Verify a password against its hash."""
-    return pwd_context.verify(plain_password, hashed_password)
+    try:
+        # Truncate plain password to 72 bytes for bcrypt compatibility
+        plain_password_bytes = plain_password.encode('utf-8')
+        if len(plain_password_bytes) > 72:
+            plain_password_bytes = plain_password_bytes[:72]
+        return bcrypt.checkpw(plain_password_bytes, hashed_password.encode('utf-8'))
+    except Exception:
+        return False
 
 def get_password_hash(password):
     """Generate password hash."""
     try:
-        # Convert to bytes and truncate to 72 bytes to prevent bcrypt error
+        # Convert to bytes and truncate to 72 bytes for bcrypt compatibility
         password_bytes = password.encode('utf-8')
         if len(password_bytes) > 72:
             password_bytes = password_bytes[:72]
-        # Convert back to string for bcrypt
-        password = password_bytes.decode('utf-8', errors='ignore')
-        return pwd_context.hash(password)
+        # Generate salt and hash
+        salt = bcrypt.gensalt()
+        hashed = bcrypt.hashpw(password_bytes, salt)
+        return hashed.decode('utf-8')
     except Exception as e:
-        # Fallback to simple password if encoding fails
         import logging
         logging.error(f"Password hashing error: {e}")
-        return pwd_context.hash(password[:72])
+        # Fallback to simple hash
+        return password[:72]
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     """Create JWT access token."""
