@@ -30,10 +30,15 @@ app = FastAPI(
 # CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://precious-torte-91796f.netlify.app", "http://localhost:3000"],  # Explicitly allow frontend
+    allow_origins=[
+        "https://precious-torte-91796f.netlify.app",
+        "http://localhost:3000",
+        "*"  # Fallback for development
+    ],
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
+    expose_headers=["*"]
 )
 
 # Security
@@ -50,6 +55,10 @@ app.include_router(webhooks.router, prefix="/api/webhooks", tags=["webhooks"])
 @app.get("/")
 async def root():
     return {"message": "ChatPulse API - AI Auto-reply Platform", "version": "1.0.0"}
+
+@app.options("/{path:path}")
+async def options_handler(path: str):
+    return {"status": "ok"}
 
 @app.get("/health")
 async def health_check():
