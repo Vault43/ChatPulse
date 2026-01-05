@@ -1,17 +1,17 @@
 import React, { useState } from 'react'
 import { Outlet, Link, useLocation } from 'react-router-dom'
 import { 
-  HomeIcon, 
-  ChatBubbleLeftRightIcon, 
-  CogIcon, 
-  ChartBarIcon,
-  CreditCardIcon,
-  CpuChipIcon,
   ArrowRightOnRectangleIcon,
   Bars3Icon,
   XMarkIcon
 } from '@heroicons/react/24/outline'
 import { useAuth } from '../contexts/AuthContext'
+import DashboardIcon from '../assets/dashboard-icon.svg'
+import ChatIcon from '../assets/chat-icon.svg'
+import AIIcon from '../assets/ai-icon.svg'
+import AnalyticsIcon from '../assets/analytics-icon.svg'
+import SubscriptionIcon from '../assets/subscription-icon.svg'
+import SettingsIcon from '../assets/settings-icon.svg'
 
 const Layout = () => {
   const { user, logout } = useAuth()
@@ -19,12 +19,12 @@ const Layout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
   const navigation = [
-    { name: 'Dashboard', href: '/dashboard', icon: HomeIcon, color: 'blue' },
-    { name: 'Chat', href: '/chat', icon: ChatBubbleLeftRightIcon, color: 'green' },
-    { name: 'AI Rules', href: '/ai-rules', icon: CpuChipIcon, color: 'purple' },
-    { name: 'Analytics', href: '/analytics', icon: ChartBarIcon, color: 'yellow' },
-    { name: 'Subscription', href: '/subscription', icon: CreditCardIcon, color: 'pink' },
-    { name: 'Settings', href: '/settings', icon: CogIcon, color: 'gray' },
+    { name: 'Dashboard', href: '/dashboard', icon: DashboardIcon, color: 'blue' },
+    { name: 'Chat', href: '/chat', icon: ChatIcon, color: 'green' },
+    { name: 'AI Rules', href: '/ai-rules', icon: AIIcon, color: 'purple' },
+    { name: 'Analytics', href: '/analytics', icon: AnalyticsIcon, color: 'yellow' },
+    { name: 'Subscription', href: '/subscription', icon: SubscriptionIcon, color: 'pink' },
+    { name: 'Settings', href: '/settings', icon: SettingsIcon, color: 'gray' },
   ]
 
   const isActive = (href) => location.pathname === href
@@ -78,7 +78,6 @@ const Layout = () => {
           {/* Navigation */}
           <nav className="flex-1 px-4 py-6 space-y-2">
             {navigation.map((item) => {
-              const Icon = item.icon
               const active = isActive(item.href)
               const colorClasses = getColorClasses(item.color, active)
               
@@ -94,7 +93,7 @@ const Layout = () => {
                     }
                   `}
                 >
-                  <Icon className={`w-5 h-5 mr-3 ${active ? 'text-white' : ''}`} />
+                  <img src={item.icon} alt={item.name} className={`w-5 h-5 mr-3 ${active ? 'filter brightness-0 invert' : ''}`} />
                   <span className={active ? 'text-white' : ''}>{item.name}</span>
                   {active && (
                     <div className="ml-auto">

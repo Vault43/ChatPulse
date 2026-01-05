@@ -1,0 +1,14 @@
+<svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="200" height="200" rx="40" fill="url(#bgGradient)"/>
+  <circle cx="100" cy="70" r="30" fill="white" opacity="0.2"/>
+  <path d="M70 90h60v8H70z" fill="white" opacity="0.3"/>
+  <path d="M80 110h40v6H80z" fill="white" opacity="0.3"/>
+  <path d="M75 125h50v6H75z" fill="white" opacity="0.3"/>
+  <text x="100" y="170" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="24" font-weight="bold">ChatPulse</text>
+  <defs>
+    <linearGradient id="bgGradient" x1="0" y1="0" x2="200" y2="200" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#3B82F6"/>
+      <stop offset="1" stop-color="#8B5CF6"/>
+    </linearGradient>
+  </defs>
+</svg>
