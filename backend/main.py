@@ -6,7 +6,7 @@ from contextlib import asynccontextmanager
 import os
 from dotenv import load_dotenv
 
-from database import engine, Base
+from database import engine, Base, SessionLocal
 from routers import auth, users, chat, ai, subscriptions, webhooks, google_auth
 from utils.security import verify_token
 
@@ -15,7 +15,30 @@ load_dotenv()
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
+    # Create tables
     Base.metadata.create_all(bind=engine)
+    
+    # Run migrations for Google OAuth fields
+    db = SessionLocal()
+    try:
+        # Check if google_id column exists
+        result = db.execute("SELECT column_name FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'google_id'")
+        if not result.fetchone():
+            print("Adding Google OAuth fields to users table...")
+            db.execute("ALTER TABLE users ADD COLUMN google_id VARCHAR(255) UNIQUE")
+            db.execute("ALTER TABLE users ADD COLUMN avatar_url VARCHAR(500)")
+            db.execute("ALTER TABLE users ADD COLUMN last_login TIMESTAMP")
+            db.execute("ALTER TABLE users ALTER COLUMN hashed_password DROP NOT NULL")
+            db.commit()
+            print("✅ Google OAuth fields added successfully")
+        else:
+            print("✅ Google OAuth fields already exist")
+    except Exception as e:
+        print(f"Migration error: {e}")
+        db.rollback()
+    finally:
+        db.close()
+    
     yield
     # Shutdown
     pass
