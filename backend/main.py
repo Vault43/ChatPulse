@@ -30,7 +30,7 @@ app = FastAPI(
 # CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, specify your frontend domain
+    allow_origins=["https://precious-torte-91796f.netlify.app", "http://localhost:3000"],  # Explicitly allow frontend
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
