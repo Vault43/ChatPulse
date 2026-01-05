@@ -9,6 +9,7 @@ from dotenv import load_dotenv
 from database import engine, Base, SessionLocal
 from routers import auth, users, chat, ai, subscriptions, webhooks, google_auth, email_verification
 from utils.security import verify_token
+from sqlalchemy import text
 
 load_dotenv()
 
@@ -22,13 +23,13 @@ async def lifespan(app: FastAPI):
     db = SessionLocal()
     try:
         # Check if google_id column exists
-        result = db.execute("SELECT column_name FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'google_id'")
+        result = db.execute(text("SELECT column_name FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'google_id'"))
         if not result.fetchone():
             print("Adding Google OAuth fields to users table...")
-            db.execute("ALTER TABLE users ADD COLUMN google_id VARCHAR(255) UNIQUE")
-            db.execute("ALTER TABLE users ADD COLUMN avatar_url VARCHAR(500)")
-            db.execute("ALTER TABLE users ADD COLUMN last_login TIMESTAMP")
-            db.execute("ALTER TABLE users ALTER COLUMN hashed_password DROP NOT NULL")
+            db.execute(text("ALTER TABLE users ADD COLUMN google_id VARCHAR(255) UNIQUE"))
+            db.execute(text("ALTER TABLE users ADD COLUMN avatar_url VARCHAR(500)"))
+            db.execute(text("ALTER TABLE users ADD COLUMN last_login TIMESTAMP"))
+            db.execute(text("ALTER TABLE users ALTER COLUMN hashed_password DROP NOT NULL"))
             db.commit()
             print("✅ Google OAuth fields added successfully")
         else:
