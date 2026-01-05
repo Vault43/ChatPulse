@@ -43,6 +43,12 @@ class UserResponse(BaseModel):
 async def register(user: UserCreate, db: Session = Depends(get_db)):
     """Register a new user."""
     
+    # Debug logging
+    import logging
+    logger = logging.getLogger(__name__)
+    logger.info(f"Registration attempt for email: {user.email}")
+    logger.info(f"Password length: {len(user.password)}")
+    
     # Validate input
     if not validate_email(user.email):
         raise HTTPException(
