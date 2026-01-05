@@ -4,8 +4,13 @@ from sqlalchemy.orm import sessionmaker, relationship
 from datetime import datetime
 import enum
 import os
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://user:password@localhost/chatpulse")
+logger.info(f"DATABASE_URL loaded: {DATABASE_URL[:50]}...")  # Log first 50 chars for security
 
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
