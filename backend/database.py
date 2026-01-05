@@ -9,8 +9,18 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# Debug all environment variables
+logger.info("=== Environment Variables Debug ===")
+env_vars = ["DATABASE_URL", "SECRET_KEY", "GEMINI_API_KEYS", "ALLOWED_ORIGINS"]
+for var in env_vars:
+    value = os.getenv(var)
+    if value:
+        logger.info(f"{var}: {'*' * 10}{value[-10:] if len(value) > 10 else value}")
+    else:
+        logger.info(f"{var}: NOT SET")
+
 DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://user:password@localhost/chatpulse")
-logger.info(f"DATABASE_URL loaded: {DATABASE_URL[:50]}...")  # Log first 50 chars for security
+logger.info(f"Final DATABASE_URL: {'*' * 10}{DATABASE_URL[-10:] if len(DATABASE_URL) > 10 else DATABASE_URL}")
 
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
