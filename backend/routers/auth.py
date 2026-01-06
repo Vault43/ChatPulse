@@ -81,9 +81,9 @@ async def register(user: UserCreate, db: Session = Depends(get_db)):
             detail=f"Password validation failed: {str(e)}"
         )
     
-    # Check if user already exists
+    # Check if user already exists (case-insensitive email)
     existing_user = db.query(User).filter(
-        (User.email == user.email) | (User.username == user.username)
+        (User.email.ilike(user.email)) | (User.username == user.username)
     ).first()
     
     if existing_user:
@@ -95,7 +95,7 @@ async def register(user: UserCreate, db: Session = Depends(get_db)):
     # Create new user
     hashed_password = get_password_hash(user.password)
     db_user = User(
-        email=sanitize_input(user.email),
+        email=sanitize_input(user.email.lower()),  # Store in lowercase
         username=sanitize_input(user.username),
         hashed_password=hashed_password,
         full_name=sanitize_input(user.full_name) if user.full_name else None,
@@ -114,8 +114,8 @@ async def login(user_credentials: UserLogin, db: Session = Depends(get_db)):
     
     print(f"Login attempt for email: {user_credentials.email}")
     
-    # Find user by email
-    user = db.query(User).filter(User.email == user_credentials.email).first()
+    # Find user by email (case-insensitive)
+    user = db.query(User).filter(User.email.ilike(user_credentials.email)).first()
     
     if not user:
         print(f"User not found: {user_credentials.email}")
