@@ -43,9 +43,9 @@ const Analytics = () => {
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">Total Conversations</dt>
+                  <dt className="text-sm font-medium text-gray-500 truncate">Total Sessions</dt>
                   <dd className="text-lg font-medium text-gray-900">
-                    {data?.total_conversations || 0}
+                    {data?.total_sessions || 0}
                   </dd>
                 </dl>
               </div>
@@ -63,9 +63,9 @@ const Analytics = () => {
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">Active Users</dt>
+                  <dt className="text-sm font-medium text-gray-500 truncate">Customer Messages</dt>
                   <dd className="text-lg font-medium text-gray-900">
-                    {data?.active_users || 0}
+                    {data?.customer_messages || 0}
                   </dd>
                 </dl>
               </div>
@@ -83,9 +83,9 @@ const Analytics = () => {
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">Avg Response Time</dt>
+                  <dt className="text-sm font-medium text-gray-500 truncate">AI Responses</dt>
                   <dd className="text-lg font-medium text-gray-900">
-                    {data?.avg_response_time || '0s'}
+                    {data?.ai_messages || 0}
                   </dd>
                 </dl>
               </div>
@@ -103,9 +103,9 @@ const Analytics = () => {
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">AI Responses</dt>
+                  <dt className="text-sm font-medium text-gray-500 truncate">Avg Messages/Session</dt>
                   <dd className="text-lg font-medium text-gray-900">
-                    {data?.ai_responses || 0}
+                    {data?.average_messages_per_session?.toFixed(1) || '0.0'}
                   </dd>
                 </dl>
               </div>
@@ -121,16 +121,16 @@ const Analytics = () => {
             <h3 className="text-lg font-medium text-gray-900 mb-4">Conversation Trends</h3>
             <div className="space-y-3">
               <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">Today</span>
-                <span className="text-sm font-medium text-gray-900">{data?.today_conversations || 0}</span>
+                <span className="text-sm text-gray-600">Total Messages</span>
+                <span className="text-sm font-medium text-gray-900">{data?.total_messages || 0}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">This Week</span>
-                <span className="text-sm font-medium text-gray-900">{data?.week_conversations || 0}</span>
+                <span className="text-sm text-gray-600">Human Messages</span>
+                <span className="text-sm font-medium text-gray-900">{data?.human_messages || 0}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">This Month</span>
-                <span className="text-sm font-medium text-gray-900">{data?.month_conversations || 0}</span>
+                <span className="text-sm text-gray-600">Period (Days)</span>
+                <span className="text-sm font-medium text-gray-900">{data?.period_days || 30}</span>
               </div>
             </div>
           </div>
@@ -138,51 +138,24 @@ const Analytics = () => {
 
         <div className="card">
           <div className="card-body">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Performance Metrics</h3>
+            <h3 className="text-lg font-medium text-gray-900 mb-4">Platform Breakdown</h3>
             <div className="space-y-3">
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">Satisfaction Rate</span>
-                <span className="text-sm font-medium text-gray-900">{data?.satisfaction_rate || '0%'}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">Resolution Rate</span>
-                <span className="text-sm font-medium text-gray-900">{data?.resolution_rate || '0%'}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">Peak Hours</span>
-                <span className="text-sm font-medium text-gray-900">{data?.peak_hours || '2-4 PM'}</span>
-              </div>
+              {data?.platforms && Object.keys(data.platforms).length > 0 ? (
+                Object.entries(data.platforms).map(([platform, count]) => (
+                  <div key={platform} className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600 capitalize">{platform}</span>
+                    <span className="text-sm font-medium text-gray-900">{count} sessions</span>
+                  </div>
+                ))
+              ) : (
+                <p className="text-sm text-gray-500">No platform data available</p>
+              )}
             </div>
           </div>
         </div>
       </div>
 
-      {/* Recent Activity */}
-      <div className="card">
-        <div className="card-body">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Recent Activity</h3>
-          <div className="space-y-2">
-            {data?.recent_activity?.length > 0 ? (
-              data.recent_activity.map((activity, index) => (
-                <div key={index} className="flex items-center justify-between py-2 border-b border-gray-100">
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">{activity.type}</p>
-                    <p className="text-xs text-gray-500">{activity.timestamp}</p>
-                  </div>
-                  <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
-                    activity.status === 'success' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                  }`}>
-                    {activity.status}
-                  </span>
-                </div>
-              ))
-            ) : (
-              <p className="text-sm text-gray-500">No recent activity</p>
-            )}
-          </div>
-        </div>
       </div>
-    </div>
   )
 }
 

@@ -45,16 +45,23 @@ const Settings = () => {
     }
   )
 
-  const handleSubmit = (e) => {
-    e.preventDefault()
-    updateProfile.mutate(formData)
+  const handleInputChange = (e) => {
+    const { name, value } = e.target
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }))
   }
 
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    })
+  const handleSubmit = (e) => {
+    e.preventDefault()
+    // Only send fields that can be updated (exclude email for security)
+    const updateData = {
+      full_name: formData.full_name,
+      company: formData.company,
+      username: formData.username
+    }
+    updateProfile.mutate(updateData)
   }
 
   if (isLoading) {
@@ -118,7 +125,7 @@ const Settings = () => {
                   type="text"
                   name="full_name"
                   value={formData.full_name}
-                  onChange={handleChange}
+                  onChange={handleInputChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
@@ -128,7 +135,7 @@ const Settings = () => {
                   type="text"
                   name="username"
                   value={formData.username}
-                  onChange={handleChange}
+                  onChange={handleInputChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
@@ -138,7 +145,7 @@ const Settings = () => {
                   type="text"
                   name="company"
                   value={formData.company}
-                  onChange={handleChange}
+                  onChange={handleInputChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
