@@ -16,6 +16,11 @@ class AIService:
         # Initialize Gemini (supports multiple keys)
         self.gemini_api_keys = self._load_gemini_keys()
         self._gemini_key_cycle = itertools.cycle(self.gemini_api_keys) if self.gemini_api_keys else None
+        
+        # Debug: Show loaded API keys
+        print(f"🔑 AI Service initialized:")
+        print(f"   OpenAI: {'✅' if self.openai_api_key else '❌'}")
+        print(f"   Gemini: {len(self.gemini_api_keys)} keys loaded")
     
     async def generate_response(
         self, 
@@ -133,23 +138,35 @@ class AIService:
         return response.choices[0].message.content.strip()
     
     async def _gemini_response(self, message: str, system_prompt: str) -> str:
-        """Generate response using Gemini."""
+        """Generate response using Gemini with API key rotation."""
 
-        gemini_key = self._get_next_gemini_key()
-        if not gemini_key:
+        if not self.gemini_api_keys:
             return "Thank you for your message. Our team will get back to you shortly."
 
-        # Note: genai.configure is global, so we configure per request using the selected key.
-        genai.configure(api_key=gemini_key)
-
-        model = genai.GenerativeModel('gemini-pro')
+        # Try each API key until one works
+        for attempt in range(len(self.gemini_api_keys)):
+            gemini_key = self._get_next_gemini_key()
+            if not gemini_key:
+                continue
+                
+            try:
+                # Configure with current key
+                genai.configure(api_key=gemini_key)
+                model = genai.GenerativeModel('gemini-pro')
+                
+                # Combine system prompt and message
+                full_prompt = f"{system_prompt}\n\nUser: {message}"
+                
+                response = model.generate_content(full_prompt)
+                return response.text.strip()
+                
+            except Exception as e:
+                print(f"Gemini API key failed (attempt {attempt + 1}): {str(e)}")
+                # Continue to next key
+                continue
         
-        # Combine system prompt and message
-        full_prompt = f"{system_prompt}\n\nUser: {message}"
-        
-        response = model.generate_content(full_prompt)
-        
-        return response.text.strip()
+        # All keys failed
+        return "I'm currently experiencing technical difficulties with my AI service. Please try again later."
     
     def get_supported_providers(self) -> List[str]:
         """Get list of supported AI providers."""
