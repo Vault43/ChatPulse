@@ -1,8 +1,10 @@
 import React from 'react'
 import { useQuery } from 'react-query'
+import { useNavigate } from 'react-router-dom'
 import api from '../services/api'
 
 const Dashboard = () => {
+  const navigate = useNavigate()
   const { data: stats, isLoading } = useQuery('userStats', async () => {
     const res = await api.get('/users/stats')
     return res.data
@@ -109,7 +111,10 @@ const Dashboard = () => {
           <p className="mb-6 text-blue-100">
             Set up your first AI rule to start automating customer responses. It only takes a few minutes!
           </p>
-          <button className="bg-white text-blue-600 px-6 py-3 rounded-lg font-medium hover:bg-blue-50 transition-colors duration-200">
+          <button 
+            onClick={() => navigate('/ai-rules')}
+            className="bg-white text-blue-600 px-6 py-3 rounded-lg font-medium hover:bg-blue-50 transition-colors duration-200"
+          >
             Create AI Rule →
           </button>
         </div>
