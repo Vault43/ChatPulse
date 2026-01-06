@@ -47,20 +47,38 @@ async def register(user: UserCreate, db: Session = Depends(get_db)):
     import logging
     logger = logging.getLogger(__name__)
     logger.info(f"Registration attempt for email: {user.email}")
+    logger.info(f"Username: {user.username}")
     logger.info(f"Password length: {len(user.password)}")
     
     # Validate input
-    if not validate_email(user.email):
+    try:
+        email_valid = validate_email(user.email)
+        logger.info(f"Email validation result: {email_valid}")
+        if not email_valid:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid email format"
+            )
+    except Exception as e:
+        logger.error(f"Email validation error: {e}")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid email format"
+            detail=f"Email validation failed: {str(e)}"
         )
     
-    password_valid, password_msg = validate_password(user.password)
-    if not password_valid:
+    try:
+        password_valid, password_msg = validate_password(user.password)
+        logger.info(f"Password validation result: {password_valid}, message: {password_msg}")
+        if not password_valid:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=password_msg
+            )
+    except Exception as e:
+        logger.error(f"Password validation error: {e}")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=password_msg
+            detail=f"Password validation failed: {str(e)}"
         )
     
     # Check if user already exists
