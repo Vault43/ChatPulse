@@ -88,9 +88,13 @@ async def generate_ai_response(
         )
         
     except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"AI service error: {str(e)}"
+        # Fallback response when AI service is unavailable
+        print(f"AI Service Error: {e}")
+        fallback_response = "I'm currently experiencing technical difficulties with my AI service. Please try again later or contact support if the issue persists."
+        
+        return AIResponse(
+            response=fallback_response,
+            provider="fallback"
         )
 
 @router.get("/rules", response_model=List[AIRuleResponse])
