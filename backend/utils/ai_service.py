@@ -2,6 +2,7 @@ import openai
 import google.generativeai as genai
 import json
 import os
+import asyncio
 from typing import List, Dict, Optional
 import itertools
 from database import SessionLocal, AIRule, User
@@ -115,12 +116,15 @@ class AIService:
             elif provider == "gemini" and self.gemini_api_keys:
                 return await self._gemini_response(message, system_prompt)
             else:
-                # Fallback response
+                # Add delay and return friendly fallback
+                await asyncio.sleep(0.5)
                 return "Thank you for your message. Our team will get back to you shortly."
         
         except Exception as e:
             print(f"AI Service Error: {e}")
-            return "I apologize, but I'm having trouble responding right now. Please try again later."
+            # Add delay and return user-friendly message
+            await asyncio.sleep(1)
+            return "I'm thinking about the best way to help you. One moment please..."
     
     async def _openai_response(self, messages: List[Dict], system_prompt: str) -> str:
         """Generate response using OpenAI."""
@@ -138,9 +142,11 @@ class AIService:
         return response.choices[0].message.content.strip()
     
     async def _gemini_response(self, message: str, system_prompt: str) -> str:
-        """Generate response using Gemini with API key rotation."""
+        """Generate response using Gemini with API key rotation and delays."""
 
         if not self.gemini_api_keys:
+            # Add small delay to make it feel natural
+            await asyncio.sleep(1)
             return "Thank you for your message. Our team will get back to you shortly."
 
         # Try each API key until one works
@@ -150,6 +156,10 @@ class AIService:
                 continue
                 
             try:
+                # Add small delay between attempts to prevent rate limiting
+                if attempt > 0:
+                    await asyncio.sleep(0.5)  # 500ms delay between retries
+                
                 # Configure with current key
                 genai.configure(api_key=gemini_key)
                 model = genai.GenerativeModel('gemini-pro')
@@ -157,16 +167,20 @@ class AIService:
                 # Combine system prompt and message
                 full_prompt = f"{system_prompt}\n\nUser: {message}"
                 
+                # Add natural delay before generating response
+                await asyncio.sleep(0.3)  # 300ms to simulate thinking
+                
                 response = model.generate_content(full_prompt)
                 return response.text.strip()
                 
             except Exception as e:
                 print(f"Gemini API key failed (attempt {attempt + 1}): {str(e)}")
-                # Continue to next key
+                # Continue to next key without user seeing the error
                 continue
         
-        # All keys failed
-        return "I'm currently experiencing technical difficulties with my AI service. Please try again later."
+        # All keys failed - return friendly message after trying all
+        await asyncio.sleep(1)  # Final delay to make it seem natural
+        return "I'm processing your request. Please give me a moment to find the best response for you."
     
     def get_supported_providers(self) -> List[str]:
         """Get list of supported AI providers."""
