@@ -247,12 +247,30 @@ class AIService:
         if bulk:
             # Allow comma and/or newline separated lists
             raw_parts = bulk.replace("\r\n", "\n").replace("\r", "\n").replace(",", "\n").split("\n")
-            keys.extend([p.strip() for p in raw_parts if p.strip()])
+            for p in raw_parts:
+                if p.strip():
+                    # Strip gemini_key_X prefix if present
+                    clean_key = p.strip()
+                    if clean_key.startswith("gemini_key_"):
+                        # Find the first digit after gemini_key_
+                        for i, char in enumerate(clean_key):
+                            if char.isdigit():
+                                clean_key = clean_key[i:]
+                                break
+                    keys.append(clean_key)
 
         for i in range(1, 21):
             k = os.getenv(f"GEMINI_API_KEY_{i}")
             if k and k.strip():
-                keys.append(k.strip())
+                # Strip gemini_key_X prefix if present
+                clean_key = k.strip()
+                if clean_key.startswith("gemini_key_"):
+                    # Find the first digit after gemini_key_
+                    for i, char in enumerate(clean_key):
+                        if char.isdigit():
+                            clean_key = clean_key[i:]
+                            break
+                keys.append(clean_key)
 
         single = os.getenv("GEMINI_API_KEY")
         if single and single.strip():
