@@ -94,10 +94,26 @@ async def register(user: UserCreate, db: Session = Depends(get_db)):
 async def login(user_credentials: UserLogin, db: Session = Depends(get_db)):
     """Authenticate user and return access token."""
     
+    print(f"Login attempt for email: {user_credentials.email}")
+    
     # Find user by email
     user = db.query(User).filter(User.email == user_credentials.email).first()
     
-    if not user or not verify_password(user_credentials.password, user.hashed_password):
+    if not user:
+        print(f"User not found: {user_credentials.email}")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect email or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
+    print(f"User found: {user.email}, ID: {user.id}")
+    print(f"Password verification attempt...")
+    
+    password_valid = verify_password(user_credentials.password, user.hashed_password)
+    print(f"Password valid: {password_valid}")
+    
+    if not password_valid:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or password",
@@ -116,6 +132,8 @@ async def login(user_credentials: UserLogin, db: Session = Depends(get_db)):
         data={"sub": user.email, "user_id": user.id},
         expires_delta=access_token_expires
     )
+    
+    print(f"Login successful for: {user.email}")
     
     return {"access_token": access_token, "token_type": "bearer"}
 
