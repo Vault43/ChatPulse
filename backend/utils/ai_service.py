@@ -56,9 +56,14 @@ class AIService:
                     return self._apply_rule_template(rule.response_template, message)
             
             # If no custom rules match, use general AI
-            return await self._generate_general_ai_response(
-                message, user_id, session_context, provider
-            )
+            try:
+                return await self._generate_general_ai_response(
+                    message, user_id, session_context, provider
+                )
+            except Exception as e:
+                print(f"AI Service Error: {e}")
+                # Fallback to rule-based response
+                return self._get_fallback_response(message)
             
         finally:
             db.close()
@@ -79,6 +84,34 @@ class AIService:
             return False
         except json.JSONDecodeError:
             return False
+    
+    def _get_fallback_response(self, message: str) -> str:
+        """Get a rule-based fallback response when AI service fails."""
+        
+        message_lower = message.lower().strip()
+        
+        # Common greeting patterns
+        if any(greeting in message_lower for greeting in ['hello', 'hi', 'hey', 'good morning', 'good afternoon', 'good evening']):
+            return "Hello! Thank you for reaching out. How can I assist you today?"
+        
+        # Help patterns
+        if any(help_word in message_lower for help_word in ['help', 'support', 'assist', 'problem', 'issue']):
+            return "I'm here to help! Our support team is available to assist you with any questions or concerns you may have. Please let me know how we can help."
+        
+        # Question patterns
+        if message_lower.endswith('?') or any(q_word in message_lower for q_word in ['what', 'when', 'where', 'how', 'why', 'who', 'which']):
+            return "That's a great question! Our team is currently optimizing our AI responses. For immediate assistance, please contact our support team, and we'll get back to you with a detailed answer."
+        
+        # Pricing/subscription patterns
+        if any(price_word in message_lower for price_word in ['price', 'cost', 'pricing', 'subscription', 'plan', 'payment']):
+            return "For information about our pricing plans and subscription options, please visit our subscription page or contact our sales team. We'll be happy to provide you with detailed pricing information."
+        
+        # Technical issues
+        if any(tech_word in message_lower for tech_word in ['error', 'broken', 'not working', 'bug', 'issue', 'problem']):
+            return "I apologize for any technical difficulties you're experiencing. Our technical team is working to ensure the best possible service. Please try again in a moment or contact support for immediate assistance."
+        
+        # Default friendly response
+        return "Thank you for your message! Our AI service is currently being enhanced to provide you with even better responses. Our team will review your message and respond accordingly. Have a great day!"
     
     def _apply_rule_template(self, template: str, message: str) -> str:
         """Apply template with message context."""
@@ -150,11 +183,13 @@ class AIService:
             return "Thank you for your message. Our team will get back to you shortly."
 
         # Try each API key until one works
+        valid_keys_tried = 0
         for attempt in range(len(self.gemini_api_keys)):
             gemini_key = self._get_next_gemini_key()
             if not gemini_key:
                 continue
                 
+            valid_keys_tried += 1
             try:
                 # Add small delay between attempts to prevent rate limiting
                 if attempt > 0:
@@ -178,9 +213,15 @@ class AIService:
                 # Continue to next key without user seeing the error
                 continue
         
-        # All keys failed - return friendly message after trying all
-        await asyncio.sleep(1)  # Final delay to make it seem natural
-        return "I'm processing your request. Please give me a moment to find the best response for you."
+        # All keys failed - provide helpful response without mentioning API issues
+        if valid_keys_tried > 0:
+            # We tried valid keys but they all failed
+            await asyncio.sleep(1)
+            return "I'm processing your request. Our AI service is currently optimizing responses for you. Please try again in a moment."
+        else:
+            # No valid keys were found
+            await asyncio.sleep(1)
+            return "Thank you for your message! Our team is working to enhance our AI capabilities. We'll respond to you shortly."
     
     def get_supported_providers(self) -> List[str]:
         """Get list of supported AI providers."""
