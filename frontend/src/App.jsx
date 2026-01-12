@@ -11,6 +11,8 @@ import AIRules from './pages/AIRules'
 import Settings from './pages/Settings'
 import Subscription from './pages/Subscription'
 import Analytics from './pages/Analytics'
+import PaymentSuccess from './pages/PaymentSuccess'
+import PaymentFailure from './pages/PaymentFailure'
 
 function App() {
   const { user, loading } = useAuth()
@@ -36,6 +38,8 @@ function App() {
         <Route path="analytics" element={<Analytics />} />
         <Route path="subscription" element={<Subscription />} />
         <Route path="settings" element={<Settings />} />
+        <Route path="payment/success" element={<PaymentSuccess />} />
+        <Route path="payment/failure" element={<PaymentFailure />} />
       </Route>
     </Routes>
   )

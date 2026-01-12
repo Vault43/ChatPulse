@@ -7,7 +7,7 @@ import os
 from dotenv import load_dotenv
 
 from database import engine, Base, SessionLocal
-from routers import auth, users, chat, ai, subscriptions, webhooks, google_auth, email_verification, password_reset
+from routers import auth, users, chat, ai, subscriptions, webhooks, google_auth, email_verification, password_reset, payments
 from utils.security import verify_token
 from sqlalchemy import text
 
@@ -78,6 +78,7 @@ app.include_router(chat.router, prefix="/api/chat", tags=["chat"])
 app.include_router(ai.router, prefix="/api/ai", tags=["ai"])
 app.include_router(subscriptions.router, prefix="/api/subscriptions", tags=["subscriptions"])
 app.include_router(webhooks.router, prefix="/api/webhooks", tags=["webhooks"])
+app.include_router(payments.router, prefix="/api/payments", tags=["payments"])
 
 @app.get("/")
 async def root():

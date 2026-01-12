@@ -117,16 +117,19 @@ class Subscription(Base):
     
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    plan = Column(Enum(SubscriptionPlan), nullable=False)
+    plan_id = Column(Integer, nullable=False)
+    plan_name = Column(String, nullable=False)
     amount = Column(Float, nullable=False)
+    duration_days = Column(Integer, nullable=False)
     currency = Column(String, default="USD")
-    status = Column(String, default="active")
-    flutterwave_reference = Column(String, unique=True)
-    payment_provider = Column(String, default="flutterwave")
-    nowpayments_reference = Column(String, unique=True)
-    started_at = Column(DateTime, default=datetime.utcnow)
-    expires_at = Column(DateTime)
+    status = Column(String, default="active")  # active, cancelled, pending, expired
+    payment_method = Column(String, nullable=False)  # card, flutterwave
+    payment_reference = Column(String, unique=True)
+    flutterwave_transaction_id = Column(String, unique=True)
     created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    expires_at = Column(DateTime)
+    cancelled_at = Column(DateTime, nullable=True)
     
     # Relationships
     user = relationship("User", back_populates="subscriptions")
