@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from datetime import timedelta
 from pydantic import BaseModel
 from typing import Optional
+import secrets
 
 from database import get_db, User, UserStatus
 from utils.security import verify_password, get_password_hash, create_access_token, verify_token, validate_email, validate_password, sanitize_input
@@ -22,6 +23,7 @@ class UserCreate(BaseModel):
 class UserLogin(BaseModel):
     email: str
     password: str
+    remember_me: Optional[bool] = False
 
 class Token(BaseModel):
     access_token: str
@@ -108,52 +110,84 @@ async def register(user: UserCreate, db: Session = Depends(get_db)):
     
     return db_user
 
-@router.post("/login", response_model=Token)
-async def login(user_credentials: UserLogin, db: Session = Depends(get_db)):
-    """Authenticate user and return access token."""
-    
-    print(f"Login attempt for email: {user_credentials.email}")
-    
-    # Find user by email (case-insensitive)
-    user = db.query(User).filter(User.email.ilike(user_credentials.email)).first()
-    
-    if not user:
-        print(f"User not found: {user_credentials.email}")
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect email or password",
-            headers={"WWW-Authenticate": "Bearer"},
+@router.post("/login")
+async def login(
+    user_data: UserLogin,
+    db: Session = Depends(get_db)
+):
+    """
+    Authenticate user and return access token
+    """
+    try:
+        # Find user by email
+        user = db.query(User).filter(User.email == user_data.email).first()
+        
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid email or password"
+            )
+        
+        # Verify password
+        if not verify_password(user_data.password, user.hashed_password):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid email or password"
+            )
+        
+        # Check if user is verified
+        if not user.is_verified:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Please verify your email before logging in"
+            )
+        
+        # Check if user is active
+        if user.status != UserStatus.ACTIVE:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Account is not active"
+            )
+        
+        # Create access token
+        access_token_expires = timedelta(minutes=60)
+        access_token = create_access_token(
+            data={"sub": str(user.id), "email": user.email},
+            expires_delta=access_token_expires
         )
-    
-    print(f"User found: {user.email}, ID: {user.id}")
-    print(f"Password verification attempt...")
-    
-    password_valid = verify_password(user_credentials.password, user.hashed_password)
-    print(f"Password valid: {password_valid}")
-    
-    if not password_valid:
+        
+        # Update last login and remember me
+        user.last_login = datetime.utcnow()
+        if user_data.remember_me:
+            user.remember_me_token = secrets.token_urlsafe(16)
+        else:
+            user.remember_me_token = None
+        db.commit()
+        
+        return {
+            "access_token": access_token,
+            "token_type": "bearer",
+            "expires_in": 3600,
+            "user": {
+                "id": user.id,
+                "email": user.email,
+                "username": user.username,
+                "full_name": user.full_name,
+                "subscription_plan": user.subscription_plan.value,
+                "is_verified": user.is_verified,
+                "avatar_url": user.avatar_url,
+                "remember_me": user.remember_me_token is not None
+            }
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Login error: {e}")
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect email or password",
-            headers={"WWW-Authenticate": "Bearer"},
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Internal server error"
         )
-    
-    if user.status != UserStatus.ACTIVE:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Account is not active"
-        )
-    
-    # Create access token
-    access_token_expires = timedelta(minutes=30)
-    access_token = create_access_token(
-        data={"sub": user.email, "user_id": user.id},
-        expires_delta=access_token_expires
-    )
-    
-    print(f"Login successful for: {user.email}")
-    
-    return {"access_token": access_token, "token_type": "bearer"}
 
 @router.get("/me", response_model=UserResponse)
 async def get_current_user(

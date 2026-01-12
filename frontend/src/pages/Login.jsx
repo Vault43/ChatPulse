@@ -8,6 +8,8 @@ import Logo from '../assets/logo.svg'
 const Login = () => {
   const [loading, setLoading] = useState(false)
   const [showForgotPassword, setShowForgotPassword] = useState(false)
+  const [rememberMe, setRememberMe] = useState(false)
+  const [forgotPasswordEmail, setForgotPasswordEmail] = useState('')
   const { login, loginWithGoogle, forgotPassword } = useAuth()
   const navigate = useNavigate()
   
@@ -15,12 +17,16 @@ const Login = () => {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm()
+  } = useForm({
+    defaultValues: {
+      rememberMe: false
+    }
+  })
 
   const onSubmit = async (data) => {
     setLoading(true)
     try {
-      const result = await login(data.email, data.password)
+      const result = await login(data.email, data.password, data.rememberMe)
       if (result.success) {
         toast.success('Welcome back to ChatPulse! 🎉')
         navigate('/dashboard')
@@ -138,7 +144,7 @@ const Login = () => {
               <div className="flex items-center">
                 <input
                   id="remember-me"
-                  name="remember-me"
+                  {...register('rememberMe')}
                   type="checkbox"
                   className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                 />
@@ -242,12 +248,21 @@ const Login = () => {
               Enter your email address and we'll send you a link to reset your password.
             </p>
             
-            <form onSubmit={handleSubmit(handleForgotPassword)}>
+            <form onSubmit={handleSubmit((data) => {
+              const email = forgotPasswordEmail || data.email
+              if (email) {
+                handleForgotPassword(email)
+              }
+            })} className="space-y-6">
               <div className="mb-6">
                 <label htmlFor="reset-email" className="block text-sm font-medium text-gray-700 mb-2">
                   Email address
                 </label>
                 <input
+                  type="email"
+                  id="reset-email"
+                  value={forgotPasswordEmail}
+                  onChange={(e) => setForgotPasswordEmail(e.target.value)}
                   {...register('email', {
                     required: 'Email is required',
                     pattern: {
@@ -255,8 +270,7 @@ const Login = () => {
                       message: 'Invalid email address',
                     },
                   })}
-                  type="email"
-                  id="reset-email"
+                  autoComplete="email"
                   className="block w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 placeholder-gray-400"
                   placeholder="you@example.com"
                 />
