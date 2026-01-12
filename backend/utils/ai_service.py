@@ -182,14 +182,19 @@ class AIService:
             await asyncio.sleep(1)
             return "Thank you for your message. Our team will get back to you shortly."
 
+        print(f"🤖 Starting Gemini response with {len(self.gemini_api_keys)} keys available")
+        
         # Try each API key until one works
         valid_keys_tried = 0
         for attempt in range(len(self.gemini_api_keys)):
             gemini_key = self._get_next_gemini_key()
             if not gemini_key:
+                print(f"❌ No key returned from _get_next_gemini_key()")
                 continue
                 
             valid_keys_tried += 1
+            print(f"🔑 Attempt {attempt + 1}: Using key starting with {gemini_key[:8]}...")
+            
             try:
                 # Add small delay between attempts to prevent rate limiting
                 if attempt > 0:
@@ -197,29 +202,32 @@ class AIService:
                 
                 # Configure with current key
                 genai.configure(api_key=gemini_key)
+                
+                # Create model
                 model = genai.GenerativeModel('gemini-pro')
                 
-                # Combine system prompt and message
-                full_prompt = f"{system_prompt}\n\nUser: {message}"
+                # Generate response
+                response = await model.generate_content_async(
+                    f"{system_prompt}\n\nUser: {message}\n\nAssistant:",
+                    generation_config={
+                        "temperature": 0.7,
+                        "max_output_tokens": 150,
+                    }
+                )
                 
-                # Add natural delay before generating response
-                await asyncio.sleep(0.3)  # 300ms to simulate thinking
-                
-                response = model.generate_content(full_prompt)
-                return response.text.strip()
+                print(f"✅ Success with key {gemini_key[:8]}...")
+                return response.text
                 
             except Exception as e:
-                print(f"Gemini API key failed (attempt {attempt + 1}): {str(e)}")
-                # Continue to next key without user seeing the error
+                print(f"❌ Gemini API key failed (attempt {attempt + 1}): {e}")
                 continue
         
-        # All keys failed - provide helpful response without mentioning API issues
-        if valid_keys_tried > 0:
-            # We tried valid keys but they all failed
+        if valid_keys_tried == 0:
+            print("❌ No valid Gemini API keys were available")
             await asyncio.sleep(1)
             return "I'm processing your request. Our AI service is currently optimizing responses for you. Please try again in a moment."
         else:
-            # No valid keys were found
+            print(f"❌ All {valid_keys_tried} Gemini API keys failed")
             await asyncio.sleep(1)
             return "Thank you for your message! Our team is working to enhance our AI capabilities. We'll respond to you shortly."
     
@@ -283,6 +291,12 @@ class AIService:
             if k not in seen:
                 deduped.append(k)
                 seen.add(k)
+
+        # Debug: Print loaded keys (first 8 chars for security)
+        print(f"🔑 Loaded {len(deduped)} Gemini API keys:")
+        for i, key in enumerate(deduped):
+            masked = key[:8] + "..." if len(key) > 8 else key
+            print(f"   Key {i+1}: {masked}")
 
         return deduped
 
