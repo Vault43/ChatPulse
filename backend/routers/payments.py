@@ -7,7 +7,7 @@ import json
 import requests
 from datetime import datetime, timedelta
 from database import get_db, User, Subscription
-from auth import get_current_user
+from routers.auth import get_current_user
 
 router = APIRouter(prefix="/api/payments", tags=["payments"])
 
