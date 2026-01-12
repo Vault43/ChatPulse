@@ -2,6 +2,7 @@ import openai
 import google.generativeai as genai
 import json
 import os
+import re
 import asyncio
 from typing import List, Dict, Optional
 import itertools
@@ -260,11 +261,11 @@ class AIService:
                     # Strip gemini_key_X prefix if present
                     clean_key = p.strip()
                     if clean_key.startswith("gemini_key_"):
-                        # Find the first digit after gemini_key_
-                        for i, char in enumerate(clean_key):
-                            if char.isdigit():
-                                clean_key = clean_key[i:]
-                                break
+                        # Find the first digit after gemini_key_ and strip everything before it
+                        import re
+                        match = re.match(r'gemini_key_\d+(.*)', clean_key)
+                        if match:
+                            clean_key = match.group(1)  # Get everything after the number
                     keys.append(clean_key)
 
         for i in range(1, 21):
@@ -273,11 +274,11 @@ class AIService:
                 # Strip gemini_key_X prefix if present
                 clean_key = k.strip()
                 if clean_key.startswith("gemini_key_"):
-                    # Find the first digit after gemini_key_
-                    for i, char in enumerate(clean_key):
-                        if char.isdigit():
-                            clean_key = clean_key[i:]
-                            break
+                    # Find the first digit after gemini_key_ and strip everything before it
+                    import re
+                    match = re.match(r'gemini_key_\d+(.*)', clean_key)
+                    if match:
+                        clean_key = match.group(1)  # Get everything after the number
                 keys.append(clean_key)
 
         single = os.getenv("GEMINI_API_KEY")
