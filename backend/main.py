@@ -34,6 +34,17 @@ async def lifespan(app: FastAPI):
             print("✅ Google OAuth fields added successfully")
         else:
             print("✅ Google OAuth fields already exist")
+        
+        # Check if remember_me_token column exists
+        result = db.execute(text("SELECT column_name FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'remember_me_token'"))
+        if not result.fetchone():
+            print("Adding remember_me_token field to users table...")
+            db.execute(text("ALTER TABLE users ADD COLUMN remember_me_token VARCHAR(255)"))
+            db.commit()
+            print("✅ remember_me_token field added successfully")
+        else:
+            print("✅ remember_me_token field already exists")
+            
     except Exception as e:
         print(f"Migration error: {e}")
         db.rollback()
