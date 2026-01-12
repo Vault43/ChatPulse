@@ -31,12 +31,12 @@ const Layout = () => {
 
   const getColorClasses = (color, active) => {
     const colors = {
-      blue: active ? 'text-blue-600' : 'text-gray-600',
-      green: active ? 'text-green-600' : 'text-gray-600',
-      purple: active ? 'text-purple-600' : 'text-gray-600',
-      yellow: active ? 'text-yellow-600' : 'text-gray-600',
-      pink: active ? 'text-pink-600' : 'text-gray-600',
-      gray: active ? 'text-gray-600' : 'text-gray-600',
+      blue: active ? 'text-purple-400' : 'text-gray-400',
+      green: active ? 'text-purple-400' : 'text-gray-400',
+      purple: active ? 'text-purple-400' : 'text-gray-400',
+      yellow: active ? 'text-purple-400' : 'text-gray-400',
+      pink: active ? 'text-purple-400' : 'text-gray-400',
+      gray: active ? 'text-purple-400' : 'text-gray-400',
     }
     return colors[color] || colors.gray
   }
@@ -58,16 +58,16 @@ const Layout = () => {
       `}>
         <div className="flex flex-col h-full">
           {/* Header */}
-          <div className="flex items-center justify-between h-16 px-6 border-b border-white/20">
+          <div className="flex items-center justify-between h-16 px-6 border-b border-gray-800">
             <div className="flex items-center">
-              <div className="bg-gradient-to-r from-purple-500 to-blue-600 rounded-xl p-3 mr-3 float-animation">
+              <div className="bg-gradient-to-r from-purple-500 to-pink-600 rounded-xl p-3 mr-3 float-animation">
                 <ChatBubbleLeftRightIcon className="w-6 h-6 text-white" />
               </div>
               <h1 className="text-2xl font-bold text-gradient">ChatPulse</h1>
             </div>
             <button
               onClick={() => setSidebarOpen(false)}
-              className="lg:hidden text-white hover:bg-white/20 rounded-lg p-2"
+              className="lg:hidden text-gray-400 hover:bg-gray-800 rounded-lg p-2"
             >
               <XMarkIcon className="w-5 h-5" />
             </button>
@@ -87,8 +87,8 @@ const Layout = () => {
                     ${active ? 'nav-item-active' : ''}
                   `}
                 >
-                  <item.icon className={`w-5 h-5 mr-3 ${active ? 'text-purple-600' : 'text-gray-500'}`} />
-                  <span>{item.name}</span>
+                  <item.icon className={`w-5 h-5 mr-3 ${active ? 'text-purple-400' : 'text-gray-500'}`} />
+                  <span className="text-gray-300">{item.name}</span>
                   {active && (
                     <div className="ml-auto">
                       <div className="w-2 h-2 bg-purple-500 rounded-full pulse-animation"></div>
@@ -100,26 +100,26 @@ const Layout = () => {
           </nav>
 
           {/* User menu */}
-          <div className="p-4 border-t border-white/20">
+          <div className="p-4 border-t border-gray-800">
             <div className="flex items-center justify-between">
               <div className="flex items-center flex-1 min-w-0">
-                <div className="bg-gradient-to-r from-purple-500 to-blue-600 rounded-full p-3 mr-3 shadow-lg">
+                <div className="bg-gradient-to-r from-purple-500 to-pink-600 rounded-full p-3 mr-3 shadow-lg">
                   <span className="text-white text-sm font-bold">
                     {user?.username?.charAt(0).toUpperCase()}
                   </span>
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold text-gray-900 truncate">
+                  <p className="text-sm font-semibold text-white truncate">
                     {user?.username}
                   </p>
-                  <p className="text-xs text-gray-600 capitalize">
+                  <p className="text-xs text-gray-400 capitalize">
                     {user?.subscription_plan || 'Free'} Plan
                   </p>
                 </div>
               </div>
               <button
                 onClick={logout}
-                className="p-3 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all duration-200"
+                className="p-3 text-gray-400 hover:text-red-400 hover:bg-gray-800 rounded-xl transition-all duration-200"
                 title="Logout"
               >
                 <ArrowRightOnRectangleIcon className="w-5 h-5" />
@@ -132,11 +132,11 @@ const Layout = () => {
       {/* Main content */}
       <div className="lg:pl-64">
         {/* Top bar for mobile */}
-        <div className="lg:hidden bg-white/80 backdrop-blur-lg border-b border-white/20 px-4 py-3">
+        <div className="lg:hidden bg-gray-900/80 backdrop-blur-lg border-b border-gray-800 px-4 py-3">
           <div className="flex items-center justify-between">
             <button
               onClick={() => setSidebarOpen(true)}
-              className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-xl"
+              className="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-xl"
             >
               <Bars3Icon className="w-6 h-6" />
             </button>
